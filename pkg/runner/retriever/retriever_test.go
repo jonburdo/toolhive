@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/stacklok/toolhive/pkg/registry"
-	regtypes "github.com/stacklok/toolhive/pkg/registry/types"
+	registry "github.com/stacklok/toolhive/pkg/registry/types"
 )
 
 func TestGetMCPServer_WithGroup(t *testing.T) {
@@ -25,7 +25,7 @@ func TestGetMCPServer_WithGroup(t *testing.T) {
 
 	// Find a group that exists in the registry
 	var testGroupName string
-	var group *regtypes.Group
+	var group *registry.Group
 	for _, g := range reg.Groups {
 		if g != nil && g.Name != "" {
 			testGroupName = g.Name

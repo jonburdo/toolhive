@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/stacklok/toolhive/pkg/logger"
-	regtypes "github.com/stacklok/toolhive/pkg/registry/types"
+	registry "github.com/stacklok/toolhive/pkg/registry/types"
 )
 
 //nolint:paralleltest // This test manages temporary directories and cannot run in parallel
@@ -141,7 +141,7 @@ func TestServerSelection(t *testing.T) {
 	data, err := os.ReadFile(registryPath)
 	require.NoError(t, err)
 
-	var reg regtypes.Registry
+	var reg registry.Registry
 	err = json.Unmarshal(data, &reg)
 	require.NoError(t, err)
 
@@ -170,15 +170,15 @@ func setupTestRegistryWithMultipleServers(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	// Create test registry with multiple servers
-	testRegistry := &regtypes.Registry{
+	testRegistry := &registry.Registry{
 		LastUpdated: "2025-06-16T12:00:00Z",
-		Servers: map[string]*regtypes.ImageMetadata{
+		Servers: map[string]*registry.ImageMetadata{
 			"github": {
-				BaseServerMetadata: regtypes.BaseServerMetadata{
+				BaseServerMetadata: registry.BaseServerMetadata{
 					Name:          "github",
 					Description:   "GitHub MCP server",
 					RepositoryURL: "https://github.com/github/github-mcp-server",
-					Metadata: &regtypes.Metadata{
+					Metadata: &registry.Metadata{
 						Stars:       100,
 						Pulls:       5000,
 						LastUpdated: "2025-06-16T12:00:00Z", // Older
@@ -187,11 +187,11 @@ func setupTestRegistryWithMultipleServers(t *testing.T) (string, func()) {
 				Image: "ghcr.io/github/github-mcp-server:latest",
 			},
 			"gitlab": {
-				BaseServerMetadata: regtypes.BaseServerMetadata{
+				BaseServerMetadata: registry.BaseServerMetadata{
 					Name:          "gitlab",
 					Description:   "GitLab MCP server",
 					RepositoryURL: "https://github.com/example/gitlab-mcp-server",
-					Metadata: &regtypes.Metadata{
+					Metadata: &registry.Metadata{
 						Stars:       50,
 						Pulls:       2000,
 						LastUpdated: "2025-06-17T12:00:00Z", // Newer
@@ -200,11 +200,11 @@ func setupTestRegistryWithMultipleServers(t *testing.T) (string, func()) {
 				Image: "mcp/gitlab:latest",
 			},
 			"fetch": {
-				BaseServerMetadata: regtypes.BaseServerMetadata{
+				BaseServerMetadata: registry.BaseServerMetadata{
 					Name:          "fetch",
 					Description:   "Fetch MCP server",
 					RepositoryURL: "https://github.com/example/fetch-mcp-server",
-					Metadata: &regtypes.Metadata{
+					Metadata: &registry.Metadata{
 						Stars:       25,
 						Pulls:       1000,
 						LastUpdated: "2025-06-15T12:00:00Z", // Oldest
@@ -241,9 +241,9 @@ func setupEmptyTestRegistry(t *testing.T) (string, func()) {
 	require.NoError(t, err)
 
 	// Create empty test registry
-	testRegistry := &regtypes.Registry{
+	testRegistry := &registry.Registry{
 		LastUpdated: "2025-06-16T12:00:00Z",
-		Servers:     map[string]*regtypes.ImageMetadata{},
+		Servers:     map[string]*registry.ImageMetadata{},
 	}
 
 	// Write registry file

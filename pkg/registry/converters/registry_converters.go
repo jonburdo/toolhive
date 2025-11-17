@@ -6,7 +6,7 @@ import (
 
 	upstreamv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 
-	"github.com/stacklok/toolhive/pkg/registry/types"
+	types "github.com/stacklok/toolhive/pkg/registry/types"
 )
 
 // NewServerRegistryFromUpstream creates a ServerRegistry from upstream ServerJSON array.

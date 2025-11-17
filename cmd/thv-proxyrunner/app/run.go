@@ -11,7 +11,7 @@ import (
 	"github.com/stacklok/toolhive/pkg/container"
 	"github.com/stacklok/toolhive/pkg/container/runtime"
 	"github.com/stacklok/toolhive/pkg/logger"
-	regtypes "github.com/stacklok/toolhive/pkg/registry/types"
+	registry "github.com/stacklok/toolhive/pkg/registry/types"
 	"github.com/stacklok/toolhive/pkg/runner"
 	"github.com/stacklok/toolhive/pkg/workloads"
 )
@@ -89,7 +89,7 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	// we use the DetachedEnvVarValidator.
 	envVarValidator := &runner.DetachedEnvVarValidator{}
 
-	var imageMetadata *regtypes.ImageMetadata
+	var imageMetadata *registry.ImageMetadata
 
 	// Get the name of the MCP server to run.
 	// This may be a server name from the registry, a container image, or a protocol scheme.
@@ -162,7 +162,7 @@ func runWithFileBasedConfig(
 	rt runtime.Runtime,
 	debugMode bool,
 	envVarValidator runner.EnvVarValidator,
-	imageMetadata *regtypes.ImageMetadata,
+	imageMetadata *registry.ImageMetadata,
 ) error {
 	// Use the file config directly with minimal essential overrides
 	config.Image = mcpServerImage

@@ -13,7 +13,7 @@ import (
 
 	"github.com/stacklok/toolhive/pkg/container/images"
 	"github.com/stacklok/toolhive/pkg/logger"
-	"github.com/stacklok/toolhive/pkg/registry/types"
+	types "github.com/stacklok/toolhive/pkg/registry/types"
 )
 
 const (

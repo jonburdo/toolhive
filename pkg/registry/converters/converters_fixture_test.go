@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/stacklok/toolhive/pkg/registry/types"
+	types "github.com/stacklok/toolhive/pkg/registry/types"
 )
 
 // TestConverters_Fixtures validates converter functions using JSON fixture files

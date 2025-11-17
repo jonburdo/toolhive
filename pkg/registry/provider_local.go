@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/stacklok/toolhive/pkg/registry/types"
+	types "github.com/stacklok/toolhive/pkg/registry/types"
 )
 
 //go:embed data/registry.json
