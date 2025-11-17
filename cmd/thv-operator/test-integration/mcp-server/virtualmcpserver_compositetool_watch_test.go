@@ -98,6 +98,15 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 		})
 
 		It("Should trigger VirtualMCPServer reconciliation when composite tool definition is created", func() {
+			// Capture initial ResourceVersion to detect reconciliation
+			initialVMCP := &mcpv1alpha1.VirtualMCPServer{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      vmcpName,
+				Namespace: namespace,
+			}, initialVMCP)).Should(Succeed())
+
+			initialResourceVersion := initialVMCP.ResourceVersion
+
 			// Create the VirtualMCPCompositeToolDefinition
 			compositeToolDef = &mcpv1alpha1.VirtualMCPCompositeToolDefinition{
 				ObjectMeta: metav1.ObjectMeta{
@@ -117,9 +126,9 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 			}
 			Expect(k8sClient.Create(ctx, compositeToolDef)).Should(Succeed())
 
-			// The VirtualMCPServer should remain reconciled after the composite tool definition is created
-			// We verify this by checking that ObservedGeneration stays current
-			Consistently(func() bool {
+			// Verify that reconciliation occurred by checking ResourceVersion changes
+			// When the controller reconciles, it updates the status, which changes ResourceVersion
+			Eventually(func() bool {
 				updatedVMCP := &mcpv1alpha1.VirtualMCPServer{}
 				err := k8sClient.Get(ctx, types.NamespacedName{
 					Name:      vmcpName,
@@ -129,11 +138,11 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 					return false
 				}
 
-				// Check that ObservedGeneration stays current (indicating successful reconciliation)
-				return updatedVMCP.Status.ObservedGeneration == updatedVMCP.Generation
-			}, time.Second*5, interval).Should(BeTrue())
+				// ResourceVersion changes when status is updated during reconciliation
+				return updatedVMCP.ResourceVersion != initialResourceVersion
+			}, timeout, interval).Should(BeTrue(), "ResourceVersion should change indicating reconciliation occurred")
 
-			// Verify the VirtualMCPServer is in a valid state
+			// Verify the VirtualMCPServer is in a valid state after reconciliation
 			updatedVMCP := &mcpv1alpha1.VirtualMCPServer{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
 				Name:      vmcpName,
@@ -242,6 +251,15 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 		})
 
 		It("Should trigger VirtualMCPServer reconciliation when composite tool definition is updated", func() {
+			// Capture initial ResourceVersion before update
+			initialVMCP := &mcpv1alpha1.VirtualMCPServer{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      vmcpName,
+				Namespace: namespace,
+			}, initialVMCP)).Should(Succeed())
+
+			initialResourceVersion := initialVMCP.ResourceVersion
+
 			// Update the VirtualMCPCompositeToolDefinition
 			Eventually(func() error {
 				freshCompositeToolDef := &mcpv1alpha1.VirtualMCPCompositeToolDefinition{}
@@ -255,9 +273,8 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 				return k8sClient.Update(ctx, freshCompositeToolDef)
 			}, timeout, interval).Should(Succeed())
 
-			// The VirtualMCPServer should remain reconciled after the update
-			// We verify this by checking that ObservedGeneration stays current
-			Consistently(func() bool {
+			// Verify that reconciliation occurred by checking ResourceVersion changes
+			Eventually(func() bool {
 				updatedVMCP := &mcpv1alpha1.VirtualMCPServer{}
 				err := k8sClient.Get(ctx, types.NamespacedName{
 					Name:      vmcpName,
@@ -267,9 +284,9 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 					return false
 				}
 
-				// Check that ObservedGeneration stays current (indicating successful reconciliation)
-				return updatedVMCP.Status.ObservedGeneration == updatedVMCP.Generation
-			}, time.Second*5, interval).Should(BeTrue())
+				// ResourceVersion changes when status is updated during reconciliation
+				return updatedVMCP.ResourceVersion != initialResourceVersion
+			}, timeout, interval).Should(BeTrue(), "ResourceVersion should change indicating reconciliation occurred")
 
 			// Verify the VirtualMCPServer is still in a valid state
 			updatedVMCP := &mcpv1alpha1.VirtualMCPServer{}
@@ -359,13 +376,14 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 		})
 
 		It("Should NOT trigger VirtualMCPServer reconciliation when unrelated composite tool definition is created", func() {
-			// Get initial generation and observed generation
+			// Get initial ResourceVersion and ObservedGeneration
 			initialVMCP := &mcpv1alpha1.VirtualMCPServer{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
 				Name:      vmcpName,
 				Namespace: namespace,
 			}, initialVMCP)).Should(Succeed())
 
+			initialResourceVersion := initialVMCP.ResourceVersion
 			initialObservedGeneration := initialVMCP.Status.ObservedGeneration
 
 			var initialReadyTime metav1.Time
@@ -395,11 +413,26 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 			}
 			Expect(k8sClient.Create(ctx, compositeToolDef)).Should(Succeed())
 
-			// Wait a bit to ensure any potential reconciliation would have occurred
-			time.Sleep(2 * time.Second)
-
 			// Verify that the VirtualMCPServer was NOT unnecessarily reconciled
-			// The ObservedGeneration should remain the same, and conditions shouldn't change
+			// ResourceVersion and ObservedGeneration should remain unchanged
+			Consistently(func() bool {
+				updatedVMCP := &mcpv1alpha1.VirtualMCPServer{}
+				err := k8sClient.Get(ctx, types.NamespacedName{
+					Name:      vmcpName,
+					Namespace: namespace,
+				}, updatedVMCP)
+				if err != nil {
+					return false
+				}
+
+				// Verify ResourceVersion and ObservedGeneration haven't changed
+				resourceVersionUnchanged := updatedVMCP.ResourceVersion == initialResourceVersion
+				observedGenerationUnchanged := updatedVMCP.Status.ObservedGeneration == initialObservedGeneration
+
+				return resourceVersionUnchanged && observedGenerationUnchanged
+			}, time.Second*3, interval).Should(BeTrue(), "VirtualMCPServer should not be reconciled for unrelated composite tool")
+
+			// Final verification of state
 			updatedVMCP := &mcpv1alpha1.VirtualMCPServer{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
 				Name:      vmcpName,
@@ -408,6 +441,9 @@ var _ = Describe("VirtualMCPServer CompositeToolDefinition Watch Integration Tes
 
 			// ObservedGeneration should be unchanged
 			Expect(updatedVMCP.Status.ObservedGeneration).To(Equal(initialObservedGeneration))
+
+			// ResourceVersion should be unchanged
+			Expect(updatedVMCP.ResourceVersion).To(Equal(initialResourceVersion))
 
 			// Ready condition timestamp should be unchanged
 			for _, cond := range updatedVMCP.Status.Conditions {
