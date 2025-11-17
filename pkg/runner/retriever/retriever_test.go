@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/stacklok/toolhive/pkg/registry"
+	regprovider "github.com/stacklok/toolhive/pkg/registry"
 	registry "github.com/stacklok/toolhive/pkg/registry/types"
 )
 
@@ -17,7 +17,7 @@ func TestGetMCPServer_WithGroup(t *testing.T) {
 	ctx := context.Background()
 
 	// Test group functionality by using actual registry provider
-	provider, err := registry.GetDefaultProvider()
+	provider, err := regprovider.GetDefaultProvider()
 	require.NoError(t, err)
 
 	reg, err := provider.GetRegistry()
